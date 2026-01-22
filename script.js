@@ -5,8 +5,9 @@ const CONTACT_EMAIL = "aatiqhamid9@gmail.com";
 
 let voiceEnabled = false;
 let pendingSpeech = null;
+let lastBotMessage = "";
 
-/* 🔊 Voice (emoji-safe, lively) */
+/* 🔊 Voice (emoji-safe) */
 function speak(text) {
   if (!voiceEnabled || !window.speechSynthesis) return;
 
@@ -24,15 +25,15 @@ function speak(text) {
   speechSynthesis.speak(u);
 }
 
-/* 🕰 Time-based greeting */
+/* Time greeting */
 function getTimeGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning ☀️";
-  if (hour < 18) return "Good afternoon 🌤️";
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning ☀️";
+  if (h < 18) return "Good afternoon 🌤️";
   return "Good evening 🌙";
 }
 
-/* 👋 Welcome (TEXT ONLY FIRST) */
+/* Welcome (TEXT FIRST) */
 window.onload = () => {
   const welcome =
     "Assalamualaikum warahmatullahi wabarakatuh. " +
@@ -40,12 +41,10 @@ window.onload = () => {
     ". I’m Leeza, Aatiq’s personal assistant. How may I assist you today?";
 
   addBot(welcome);
-
-  // save speech until user interacts
   pendingSpeech = welcome;
 };
 
-/* 🔓 ENABLE VOICE AFTER FIRST USER ACTION */
+/* Enable voice after first interaction */
 function enableVoiceOnce() {
   if (voiceEnabled) return;
 
@@ -54,6 +53,8 @@ function enableVoiceOnce() {
   if (pendingSpeech) {
     speak(pendingSpeech);
     pendingSpeech = null;
+  } else if (lastBotMessage) {
+    speak(lastBotMessage);
   }
 
   document.removeEventListener("click", enableVoiceOnce);
@@ -63,7 +64,7 @@ function enableVoiceOnce() {
 document.addEventListener("click", enableVoiceOnce);
 document.addEventListener("keydown", enableVoiceOnce);
 
-/* 📩 Send message */
+/* Send message */
 function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
@@ -78,7 +79,7 @@ function sendMessage() {
   }, 400);
 }
 
-/* 🧠 Brain */
+/* Brain */
 function brain(msg) {
 
   if (msg.includes("assalamualaikum") || msg.includes("salam"))
@@ -109,7 +110,7 @@ function brain(msg) {
   )
     return (
       "That information is confidential 😌🔒\n" +
-      "You can contact Aatiq directly at 📧 " + CONTACT_EMAIL
+      "You can contact Aatiq at 📧 " + CONTACT_EMAIL
     );
 
   return random([
@@ -121,12 +122,11 @@ function brain(msg) {
   ]);
 }
 
-/* 🎲 Helper */
+/* Helpers */
 function random(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/* 💬 UI helpers */
 function addUser(text) {
   const div = document.createElement("div");
   div.className = "bubble user";
@@ -136,6 +136,7 @@ function addUser(text) {
 }
 
 function addBot(text) {
+  lastBotMessage = text;
   const div = document.createElement("div");
   div.className = "bubble bot";
   div.innerHTML = format(text);
@@ -143,7 +144,6 @@ function addBot(text) {
   chatbox.scrollTop = chatbox.scrollHeight;
 }
 
-/* 🔗 Links */
 function format(text) {
   return text.replace(
     /(https?:\/\/[^\s]+)/g,
@@ -151,7 +151,6 @@ function format(text) {
   );
 }
 
-/* ⌨️ Enter key */
 input.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
 });
