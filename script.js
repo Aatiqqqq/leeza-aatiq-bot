@@ -3,29 +3,36 @@ const input = document.getElementById("userInput");
 
 const CONTACT_EMAIL = "aatiqhamid9@gmail.com";
 
-/* ================= STATE ================= */
+/* ===== STATE ===== */
 let voiceEnabled = false;
 let pendingSpeech = null;
-let lastBotMessage = "";
 
-/* Anti-spam */
-let lastUserMessage = "";
-let repeatCount = 0;
-let leezaQuestionCount = 0;
-let totalMessageCount = 0;
+/* Ensure voices load (important for mobile) */
+speechSynthesis.onvoiceschanged = () => {
+  speechSynthesis.getVoices();
+};
 
-/* 🔊 Voice */
+/* 🔊 Best-possible cross-device voice */
 function speak(text) {
   if (!voiceEnabled || !window.speechSynthesis) return;
 
-  const clean = text.replace(
+  const cleanText = text.replace(
     /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
     ""
   );
 
-  const u = new SpeechSynthesisUtterance(clean);
-  u.rate = clean.toLowerCase().includes("assalamualaikum") ? 0.9 : 1.0;
-  u.pitch = 1.15;
+  const u = new SpeechSynthesisUtterance(cleanText);
+  const voices = speechSynthesis.getVoices();
+
+  const preferred =
+    voices.find(v => /female|woman|google|samantha|microsoft/i.test(v.name)) ||
+    voices.find(v => /en/i.test(v.lang)) ||
+    voices[0];
+
+  if (preferred) u.voice = preferred;
+
+  u.rate = 0.98;
+  u.pitch = 1.12;
   u.volume = 1;
 
   speechSynthesis.cancel();
@@ -51,7 +58,7 @@ window.onload = () => {
   pendingSpeech = welcome;
 };
 
-/* Enable voice */
+/* Enable voice after first tap */
 function enableVoiceOnce() {
   if (voiceEnabled) return;
   voiceEnabled = true;
@@ -68,7 +75,7 @@ function enableVoiceOnce() {
 document.addEventListener("click", enableVoiceOnce);
 document.addEventListener("keydown", enableVoiceOnce);
 
-/* Send */
+/* Send message */
 function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
@@ -83,29 +90,24 @@ function sendMessage() {
   }, 300);
 }
 
-/* ================= BRAIN ================= */
+/* 🧠 BRAIN (NO OVERLAPS) */
 function brain(msg) {
 
-  totalMessageCount++;
-
-  /* ---------- STRICT COMMANDS (EXIT EARLY) ---------- */
-
-  // TIME (ONLY TIME)
+  /* ⏰ TIME */
   if (
     msg === "time" ||
-    msg === "time now" ||
     msg === "current time" ||
+    msg === "time now" ||
     msg === "what time is it"
   ) {
     return "Right now it’s " + new Date().toLocaleTimeString();
   }
 
-  // DATE
+  /* 📅 DATE */
   if (
     msg === "date" ||
     msg === "today" ||
     msg === "today date" ||
-    msg === "what is today" ||
     msg === "what day is today"
   ) {
     return "Today is " + new Date().toLocaleDateString(undefined, {
@@ -116,86 +118,72 @@ function brain(msg) {
     });
   }
 
-  /* ---------- ANTI-SPAM TRACKING ---------- */
-
-  if (msg === lastUserMessage) repeatCount++;
-  else repeatCount = 0;
-
-  lastUserMessage = msg;
-
-  if (
-    msg.includes("leeza") ||
-    msg.includes("who are you") ||
-    msg.includes("about you")
-  ) {
-    leezaQuestionCount++;
-  }
-
-  if (repeatCount >= 2 || leezaQuestionCount >= 4 || totalMessageCount >= 18) {
-    return (
-      "That information is confidential 🔒. " +
-      "Please contact Aatiq at 📧 " +
-      CONTACT_EMAIL
-    );
-  }
-
-  /* ---------- NORMAL CHAT ---------- */
-
+  /* Greetings */
   if (msg.includes("assalamualaikum") || msg === "salam")
     return "Wa alaikum assalam warahmatullahi wabarakatuh 🤍";
 
   if (msg.match(/\b(hi|hello|hey|hii|yo)\b/))
     return "Hello 👋 You’re chatting with Leeza, built by Aatiq.";
 
-  if (msg.includes("how are you"))
-    return "I’m doing well 😌 Always happy to support Aatiq’s work.";
-
+  /* About */
   if (msg.includes("who are you"))
     return "I’m Leeza, a personal assistant designed by Aatiq.";
 
-  if (msg.includes("aatiq"))
-    return "Aatiq is a focused creator who values clarity, discipline, and quality.";
-
-  if (msg.includes("project") || msg.includes("work"))
+  if (msg.includes("aatiq") && msg.includes("project"))
     return (
-      "Aatiq prefers quality over quantity. " +
-      "Here’s one of his projects 👇\n" +
+      "Aatiq believes in quality over quantity. Here’s one of his best projects 👇\n" +
       "https://aatiqqqq.github.io/linktree-site/"
     );
 
+  if (msg.includes("aatiq"))
+    return "Aatiq is a focused creator who values clarity, discipline, and meaningful design.";
+
+  /* Confidential */
   if (
     msg.includes("secret") ||
-    msg.includes("confidential") ||
-    msg.includes("private")
-  )
+    msg.includes("private") ||
+    msg.includes("confidential")
+  ) {
     return (
-      "That information is confidential 🔒. " +
-      "Contact Aatiq at 📧 " +
-      CONTACT_EMAIL
+      "That information is confidential 🔒\n" +
+      "Please contact Aatiq at 📧 " + CONTACT_EMAIL
     );
+  }
 
-  /* ---------- DEFAULT ---------- */
+  /* Default */
   return "Aatiq believes meaningful conversations always lead somewhere valuable.";
 }
 
-/* ================= UI HELPERS ================= */
+/* UI helpers */
 function addUser(text) {
-  const d = document.createElement("div");
-  d.className = "bubble user";
-  d.innerHTML = text;
-  chatbox.appendChild(d);
+  const div = document.createElement("div");
+  div.className = "bubble user";
+  div.innerHTML = text;
+  chatbox.appendChild(div);
   chatbox.scrollTop = chatbox.scrollHeight;
 }
 
 function addBot(text) {
-  lastBotMessage = text;
-  const d = document.createElement("div");
-  d.className = "bubble bot";
-  d.innerHTML = text;
-  chatbox.appendChild(d);
+  const div = document.createElement("div");
+  div.className = "bubble bot";
+  div.innerHTML = format(text);
+  chatbox.appendChild(div);
   chatbox.scrollTop = chatbox.scrollHeight;
 }
 
+/* Mobile-safe clickable link */
+function format(text) {
+  return text.replace(
+    /(https?:\/\/[^\s]+)/g,
+    `<a href="$1" target="_blank" rel="noopener"
+      style="display:inline-block;margin-top:6px;
+      color:#6f7cff;font-weight:600;">
+      🔗 Open project
+     </a>`
+  );
+}
+
+/* Enter key */
 input.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
 });
