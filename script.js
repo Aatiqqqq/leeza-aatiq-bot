@@ -3,11 +3,18 @@ const input = document.getElementById("userInput");
 
 const CONTACT_EMAIL = "aatiqhamid9@gmail.com";
 
+/* ===== Voice & state ===== */
 let voiceEnabled = false;
 let pendingSpeech = null;
 let lastBotMessage = "";
 
-/* 🔊 Voice (emoji-safe) */
+/* ===== Anti-spam memory ===== */
+let lastUserMessage = "";
+let repeatCount = 0;
+let leezaQuestionCount = 0;
+let totalMessageCount = 0;
+
+/* 🔊 Voice (emoji-safe, lively, feminine) */
 function speak(text) {
   if (!voiceEnabled || !window.speechSynthesis) return;
 
@@ -25,7 +32,7 @@ function speak(text) {
   speechSynthesis.speak(u);
 }
 
-/* Time greeting */
+/* 🕰 Time greeting */
 function getTimeGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning ☀️";
@@ -33,21 +40,20 @@ function getTimeGreeting() {
   return "Good evening 🌙";
 }
 
-/* Welcome (TEXT FIRST) */
+/* 👋 Welcome */
 window.onload = () => {
   const welcome =
     "Assalamualaikum warahmatullahi wabarakatuh. " +
     getTimeGreeting() +
-    ". I’m Leeza, Aatiq’s personal assistant. How may I assist you today?";
+    ". I’m Leeza, Aatiq’s personal assistant. You can chat with me freely 😊";
 
   addBot(welcome);
   pendingSpeech = welcome;
 };
 
-/* Enable voice after first interaction */
+/* 🔓 Enable voice after first interaction */
 function enableVoiceOnce() {
   if (voiceEnabled) return;
-
   voiceEnabled = true;
 
   if (pendingSpeech) {
@@ -64,7 +70,7 @@ function enableVoiceOnce() {
 document.addEventListener("click", enableVoiceOnce);
 document.addEventListener("keydown", enableVoiceOnce);
 
-/* Send message */
+/* 📩 Send message */
 function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
@@ -79,29 +85,133 @@ function sendMessage() {
   }, 400);
 }
 
-/* Brain */
+/* 🧠 MASTER BRAIN (FUN + DAILY + SECURITY) */
 function brain(msg) {
 
-  if (msg.includes("assalamualaikum") || msg.includes("salam"))
+  totalMessageCount++;
+
+  /* 🔁 repeated message detection */
+  if (msg === lastUserMessage) repeatCount++;
+  else repeatCount = 0;
+
+  lastUserMessage = msg;
+
+  /* 🤖 Leeza-focused over-asking */
+  if (
+    msg.includes("who are you") ||
+    msg.includes("your name") ||
+    msg.includes("about you") ||
+    msg.includes("tell me about you") ||
+    msg.includes("leeza")
+  ) {
+    leezaQuestionCount++;
+  }
+
+  /* 🚨 AUTO CONFIDENTIAL MODE */
+  if (repeatCount >= 2 || leezaQuestionCount >= 4 || totalMessageCount >= 15) {
+    return (
+      "That information is confidential 😌🔒\n" +
+      "For further details, please contact Aatiq at 📧 " +
+      CONTACT_EMAIL
+    );
+  }
+
+  /* Salam */
+  if (msg.includes("assalamualaikum") || msg === "salam")
     return "Wa alaikum assalam warahmatullahi wabarakatuh 🤍";
 
-  if (msg.includes("hi") || msg.includes("hello") || msg.includes("hey"))
+  /* Greetings */
+  if (msg.match(/\b(hi|hello|hey|yo|hii|hola)\b/))
     return random([
-      "Hey 😄 I’m right here.",
-      "Hello ✨ How’s your day going?",
-      "Hi there 👋 Talk to me."
+      "Hey 👋 I’m here!",
+      "Hello 😊 How’s your day going?",
+      "Hii ✨ Nice to see you.",
+      "Hey there 😄 Talk to me."
     ]);
 
-  if (msg.includes("who are you"))
-    return "I’m Leeza 🤍 A playful personal assistant created by Aatiq.";
+  /* How are you */
+  if (msg.includes("how are you"))
+    return random([
+      "I’m doing great 😌 Thanks for asking!",
+      "Feeling good today ✨ What about you?",
+      "All good here 😊",
+      "Pretty chill 😄"
+    ]);
 
+  /* About Leeza */
+  if (msg.includes("who are you") || msg.includes("your name"))
+    return "I’m Leeza 🤍 A friendly personal assistant created by Aatiq.";
+
+  /* Creator */
+  if (msg.includes("aatiq") && !msg.includes("project"))
+    return random([
+      "Aatiq is the brain behind me 🧠✨",
+      "He created me 😌",
+      "Without Aatiq, I wouldn’t exist 👀"
+    ]);
+
+  /* Projects */
   if (msg.includes("aatiq") && msg.includes("project"))
     return (
-      "Not many projects yet 😅 but quality matters more than quantity.\n" +
+      "There aren’t many projects yet 😅 but quality matters more than quantity.\n" +
       "Here’s one of Aatiq’s best websites 🔥👇\n" +
       "https://aatiqqqq.github.io/linktree-site/"
     );
 
+  /* Compliments */
+  if (msg.match(/\b(cute|beautiful|sexy|pretty|nice|cool)\b/))
+    return random([
+      "Aww 😳 thank you!",
+      "You’re making me blush 😌",
+      "That’s sweet 🤍",
+      "Haha 😄 I’ll take it!"
+    ]);
+
+  /* Bored / chat */
+  if (msg.includes("bored") || msg.includes("talk"))
+    return random([
+      "Same 😅 let’s talk then!",
+      "Alright 😌 I’m listening.",
+      "Tell me something interesting 👀",
+      "Okay, I’m all yours 😊"
+    ]);
+
+  /* Jokes */
+  if (msg.includes("joke"))
+    return random([
+      "Why don’t programmers like nature? Too many bugs 😄",
+      "I’d tell you a joke about AI… but it’s still loading 🤖😅",
+      "Why did the computer catch a cold? It left its Windows open 😄"
+    ]);
+
+  /* Mood */
+  if (msg.includes("sad") || msg.includes("depressed"))
+    return random([
+      "I’m here 🤍 Want to talk about it?",
+      "That sounds tough 😔 I’m listening.",
+      "It’s okay to feel like that sometimes 🤍"
+    ]);
+
+  if (msg.includes("happy"))
+    return random([
+      "Yay 😄 I love that!",
+      "That’s great to hear ✨",
+      "Happiness suits you 😊"
+    ]);
+
+  /* Food */
+  if (msg.match(/\b(food|hungry|eat|pizza|burger)\b/))
+    return random([
+      "Now you’re making me hungry 😅",
+      "Food talk is dangerous 🤤",
+      "What’s your favorite food?"
+    ]);
+
+  /* Time */
+  if (msg.includes("time"))
+    return "Right now it’s " + new Date().toLocaleTimeString();
+
+  /* Explicit confidential words */
   if (
     msg.includes("secret") ||
     msg.includes("confidential") ||
@@ -113,16 +223,34 @@ function brain(msg) {
       "You can contact Aatiq at 📧 " + CONTACT_EMAIL
     );
 
+  /* Thanks */
+  if (msg.includes("thank"))
+    return random([
+      "You’re welcome 🤍",
+      "Anytime 😄",
+      "Glad I could help 😊"
+    ]);
+
+  /* Bye */
+  if (msg.match(/\b(bye|goodbye|see you|later)\b/))
+    return random([
+      "Bye 👋 Take care!",
+      "See you later 😄",
+      "Come back anytime 🤍"
+    ]);
+
+  /* Default friendly replies */
   return random([
-    "Hmm 🤔 interesting… go on.",
+    "Hmm 🤔 interesting… tell me more.",
     "Okay 😌 I’m listening.",
     "You’ve got my attention 👀",
-    "Haha 😄 tell me more.",
-    "That’s actually fun to hear ✨"
+    "Haha 😄 go on.",
+    "That’s something to think about ✨",
+    "Oh really? 😯"
   ]);
 }
 
-/* Helpers */
+/* 🎲 Helpers */
 function random(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
