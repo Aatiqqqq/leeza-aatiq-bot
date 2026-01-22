@@ -3,9 +3,12 @@ const input = document.getElementById("userInput");
 
 const CONTACT_EMAIL = "aatiqhamid9@gmail.com";
 
+let voiceEnabled = false;
+let pendingSpeech = null;
+
 /* 🔊 Voice (emoji-safe, lively) */
 function speak(text) {
-  if (!window.speechSynthesis) return;
+  if (!voiceEnabled || !window.speechSynthesis) return;
 
   const cleanText = text.replace(
     /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
@@ -29,7 +32,7 @@ function getTimeGreeting() {
   return "Good evening 🌙";
 }
 
-/* 👋 Welcome */
+/* 👋 Welcome (TEXT ONLY FIRST) */
 window.onload = () => {
   const welcome =
     "Assalamualaikum warahmatullahi wabarakatuh. " +
@@ -37,8 +40,28 @@ window.onload = () => {
     ". I’m Leeza, Aatiq’s personal assistant. How may I assist you today?";
 
   addBot(welcome);
-  speak(welcome);
+
+  // save speech until user interacts
+  pendingSpeech = welcome;
 };
+
+/* 🔓 ENABLE VOICE AFTER FIRST USER ACTION */
+function enableVoiceOnce() {
+  if (voiceEnabled) return;
+
+  voiceEnabled = true;
+
+  if (pendingSpeech) {
+    speak(pendingSpeech);
+    pendingSpeech = null;
+  }
+
+  document.removeEventListener("click", enableVoiceOnce);
+  document.removeEventListener("keydown", enableVoiceOnce);
+}
+
+document.addEventListener("click", enableVoiceOnce);
+document.addEventListener("keydown", enableVoiceOnce);
 
 /* 📩 Send message */
 function sendMessage() {
@@ -55,14 +78,12 @@ function sendMessage() {
   }, 400);
 }
 
-/* 🧠 Playful brain (CONFIDENTIAL = EMAIL ALWAYS) */
+/* 🧠 Brain */
 function brain(msg) {
 
-  /* Salam */
   if (msg.includes("assalamualaikum") || msg.includes("salam"))
     return "Wa alaikum assalam warahmatullahi wabarakatuh 🤍";
 
-  /* Greetings */
   if (msg.includes("hi") || msg.includes("hello") || msg.includes("hey"))
     return random([
       "Hey 😄 I’m right here.",
@@ -70,11 +91,9 @@ function brain(msg) {
       "Hi there 👋 Talk to me."
     ]);
 
-  /* About Leeza */
   if (msg.includes("who are you"))
     return "I’m Leeza 🤍 A playful personal assistant created by Aatiq.";
 
-  /* Projects */
   if (msg.includes("aatiq") && msg.includes("project"))
     return (
       "Not many projects yet 😅 but quality matters more than quantity.\n" +
@@ -82,25 +101,17 @@ function brain(msg) {
       "https://aatiqqqq.github.io/linktree-site/"
     );
 
-  /* 🔒 CONFIDENTIAL – ALWAYS SHARE EMAIL */
   if (
     msg.includes("secret") ||
     msg.includes("confidential") ||
     msg.includes("private") ||
     msg.includes("personal")
   )
-    return random([
-      `That information is confidential 😌🔒  
-You can contact Aatiq directly at 📧 ${CONTACT_EMAIL}`,
+    return (
+      "That information is confidential 😌🔒\n" +
+      "You can contact Aatiq directly at 📧 " + CONTACT_EMAIL
+    );
 
-      `I can’t share that publicly 🤍  
-Please reach out to Aatiq via email 📧 ${CONTACT_EMAIL}`,
-
-      `That’s private information 👀  
-For details, contact Aatiq at 📧 ${CONTACT_EMAIL}`
-    ]);
-
-  /* Default playful replies */
   return random([
     "Hmm 🤔 interesting… go on.",
     "Okay 😌 I’m listening.",
