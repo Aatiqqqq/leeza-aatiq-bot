@@ -3,12 +3,12 @@ const input = document.getElementById("userInput");
 
 const CONTACT_EMAIL = "aatiqhamid9@gmail.com";
 
-/* ===== Voice state ===== */
+/* ================= VOICE STATE ================= */
 let voiceEnabled = false;
 let pendingSpeech = null;
 let lastBotMessage = "";
 
-/* ===== Anti-spam memory ===== */
+/* ================= ANTI-SPAM MEMORY ================= */
 let lastUserMessage = "";
 let repeatCount = 0;
 let leezaQuestionCount = 0;
@@ -32,7 +32,7 @@ function speak(text) {
   speechSynthesis.speak(u);
 }
 
-/* 🕰 Greeting */
+/* 🕰 Time-based greeting */
 function getTimeGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning ☀️";
@@ -40,19 +40,18 @@ function getTimeGreeting() {
   return "Good evening 🌙";
 }
 
-/* 👋 Welcome */
+/* 👋 Welcome (text first, voice after click) */
 window.onload = () => {
   const welcome =
     "Assalamualaikum warahmatullahi wabarakatuh. " +
     getTimeGreeting() +
-    ". I’m Leeza, Aatiq’s personal assistant. " +
-    "I’m here to help and proudly represent Aatiq’s work 😊";
+    ". I’m Leeza, Aatiq’s personal assistant. I proudly represent his work and ideas.";
 
   addBot(welcome);
   pendingSpeech = welcome;
 };
 
-/* 🔓 Enable voice after interaction */
+/* 🔓 Enable voice after first interaction */
 function enableVoiceOnce() {
   if (voiceEnabled) return;
   voiceEnabled = true;
@@ -86,31 +85,54 @@ function sendMessage() {
   }, 350);
 }
 
-/* 🧠 MAIN BRAIN (AATIQ-FIRST LOGIC) */
+/* ===================== BRAIN ===================== */
 function brain(msg) {
 
   totalMessageCount++;
 
-  /* Repetition tracking */
+  /* 🔁 Repeat detection */
   if (msg === lastUserMessage) repeatCount++;
   else repeatCount = 0;
   lastUserMessage = msg;
 
-  /* Leeza over-questions */
+  /* 🤖 Too many Leeza questions */
   if (
+    msg.includes("leeza") ||
     msg.includes("who are you") ||
     msg.includes("about you") ||
-    msg.includes("your name") ||
-    msg.includes("leeza")
+    msg.includes("your name")
   ) {
     leezaQuestionCount++;
   }
 
-  /* 🚨 Confidential mode */
+  /* ⏰ TIME (HIGHEST PRIORITY) */
+  if (
+    msg.includes("time") ||
+    msg.includes("current time") ||
+    msg.includes("time now")
+  ) {
+    return "Right now it’s " + new Date().toLocaleTimeString();
+  }
+
+  /* 📅 DATE / DAY */
+  if (
+    msg.includes("date") ||
+    msg.includes("today") ||
+    msg.includes("day")
+  ) {
+    return "Today is " + new Date().toLocaleDateString(undefined, {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  }
+
+  /* 🚨 AUTO CONFIDENTIAL MODE */
   if (repeatCount >= 2 || leezaQuestionCount >= 4 || totalMessageCount >= 18) {
     return (
       "Some details are confidential 🔒. " +
-      "For accurate information, please contact Aatiq directly at 📧 " +
+      "For accurate information, please contact Aatiq at 📧 " +
       CONTACT_EMAIL
     );
   }
@@ -122,9 +144,9 @@ function brain(msg) {
   /* Greetings */
   if (msg.match(/\b(hi|hello|hey|yo|hii|hola)\b/))
     return random([
-      "Hello 👋 Welcome! You’re interacting with a system designed by Aatiq.",
+      "Hello 👋 You’re interacting with a system designed by Aatiq.",
       "Hey there 😊 This assistant is proudly created by Aatiq.",
-      "Hi ✨ You’re chatting with Leeza, built by Aatiq."
+      "Hi ✨ Leeza here, built by Aatiq with care."
     ]);
 
   /* How are you */
@@ -139,39 +161,39 @@ function brain(msg) {
   if (msg.includes("who are you") || msg.includes("your name"))
     return (
       "I’m Leeza 🤍, a personal assistant thoughtfully designed by Aatiq " +
-      "to interact professionally and respectfully."
+      "to reflect professionalism, respect, and clarity."
     );
 
   /* About Aatiq (STRONG PRAISE) */
   if (msg.includes("aatiq"))
     return random([
-      "Aatiq is a passionate and detail-focused creator who values quality over shortcuts.",
-      "Aatiq believes in building things properly, not just quickly — that’s what makes his work stand out.",
-      "Every part of me reflects Aatiq’s mindset: clean, respectful, and thoughtful design."
+      "Aatiq is a focused and thoughtful creator who believes in quality over shortcuts.",
+      "Aatiq values clarity, discipline, and meaningful design — that’s reflected in everything he builds.",
+      "Every response you get here carries Aatiq’s mindset: clean, respectful, and intentional."
     ]);
 
-  /* Projects */
+  /* Projects / Work */
   if (msg.includes("project") || msg.includes("work"))
     return (
-      "Aatiq focuses on quality rather than quantity. " +
-      "Here’s one of his best projects that reflects his design sense 👇\n" +
+      "Aatiq prefers quality over quantity. " +
+      "Here’s one of his best projects that reflects his design thinking 👇\n" +
       "https://aatiqqqq.github.io/linktree-site/"
     );
 
   /* Compliments */
   if (msg.match(/\b(cute|beautiful|sexy|pretty|nice|cool|smart)\b/))
     return random([
-      "Thank you 😌 Aatiq designed me to feel warm and respectful.",
-      "I appreciate that 😊 Aatiq pays attention to these details.",
-      "That means a lot 🤍 Aatiq values good presentation."
+      "Thank you 😌 Aatiq designed me with attention to detail.",
+      "I appreciate that 😊 Aatiq believes presentation matters.",
+      "That’s kind 🤍 Aatiq values thoughtful design."
     ]);
 
-  /* Random daily chat → redirect to Aatiq */
-  if (msg.length < 4)
+  /* Mood / Casual */
+  if (msg.includes("bored") || msg.includes("talk"))
     return random([
-      "Even small ideas matter — Aatiq believes in refining everything.",
-      "Aatiq likes meaningful conversations, not just random noise.",
-      "Quality thinking is something Aatiq always appreciates."
+      "Aatiq believes good conversations should have purpose.",
+      "Meaningful talk always reflects Aatiq’s mindset.",
+      "Aatiq prefers depth over noise — let’s talk properly."
     ]);
 
   /* Explicit confidential */
@@ -183,25 +205,28 @@ function brain(msg) {
   )
     return (
       "That information is confidential 🔒. " +
-      "For verified details, please contact Aatiq at 📧 " +
+      "For verified details, contact Aatiq at 📧 " +
       CONTACT_EMAIL
     );
 
-  /* DEFAULT (NO MORE GENERIC) */
+  /* Goodbye */
+  if (msg.match(/\b(bye|goodbye|see you|later)\b/))
+    return "Take care 👋 Aatiq appreciates thoughtful visitors.";
+
+  /* DEFAULT (NO BORING REPLIES) */
   return random([
-    "That’s an interesting thought. Aatiq enjoys conversations that lead somewhere meaningful.",
-    "Aatiq believes clarity and purpose matter more than random talk.",
-    "Thoughtful questions always align with Aatiq’s mindset.",
-    "Aatiq focuses on intention — that’s what builds good systems."
+    "That’s an interesting thought. Aatiq believes conversations should lead somewhere meaningful.",
+    "Clarity and intention matter — values Aatiq strongly believes in.",
+    "Thoughtful questions always align with Aatiq’s way of thinking.",
+    "Aatiq focuses on purpose, not randomness — that’s what builds quality systems."
   ]);
 }
 
-/* 🎲 Helper */
+/* ================= HELPERS ================= */
 function random(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/* UI helpers */
 function addUser(text) {
   const div = document.createElement("div");
   div.className = "bubble user";
